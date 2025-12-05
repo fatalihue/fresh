@@ -1,0 +1,11 @@
+CTT
+Powershell, Admin
+
+```irm "https://christitus.com/win" | iex```
+
+
+
+Activated
+Powershell, Admin
+
+```irm https://get.activated.win | iex```
