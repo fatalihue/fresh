@@ -1,11 +1,11 @@
-CTT
-Powershell, Admin
+### Stable Branch (Recommended)
 
-```irm "https://christitus.com/win" | iex```
+```bash
+irm "https://christitus.com/win" | iex
 
 
 
-Activated
-Powershell, Admin
+### Stable Branch (Recommended)
 
-```irm https://get.activated.win | iex```
+```bash
+irm https://get.activated.win | iex
