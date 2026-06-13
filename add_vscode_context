@@ -1,0 +1,75 @@
+PowerShell como ADM:
+
+
+
+
+$exe = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe"
+
+New-Item -Path "HKCU:\Software\Classes\Directory\shell\VSCode" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\shell\VSCode" -Name "(Default)" -Value "Abrir com o Code"
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\shell\VSCode" -Name "Icon" -Value $exe
+New-Item -Path "HKCU:\Software\Classes\Directory\shell\VSCode\command" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\shell\VSCode\command" -Name "(Default)" -Value "`"$exe`" `"%V`""
+
+New-Item -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode" -Name "(Default)" -Value "Abrir com o Code"
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode" -Name "Icon" -Value $exe
+New-Item -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode\command" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode\command" -Name "(Default)" -Value "`"$exe`" `"%V`""
+
+
+
+
+
+
+
+
+Usa HKCU em vez de HKEY_CLASSES_ROOT para não precisar de admin de fato (mas roda melhor com privilégio elevado mesmo assim). Ajuste o caminho do $exe se tiver instalado em outro local (ex: C:\Program Files\Microsoft VS Code\Code.exe).
+
+Opção 1: arquivo .ps1
+
+
+
+$exe = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe"
+
+New-Item -Path "HKCU:\Software\Classes\Directory\shell\VSCode" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\shell\VSCode" -Name "(Default)" -Value "Abrir com o Code"
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\shell\VSCode" -Name "Icon" -Value $exe
+New-Item -Path "HKCU:\Software\Classes\Directory\shell\VSCode\command" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\shell\VSCode\command" -Name "(Default)" -Value "`"$exe`" `"%V`""
+
+New-Item -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode" -Name "(Default)" -Value "Abrir com o Code"
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode" -Name "Icon" -Value $exe
+New-Item -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode\command" -Force | Out-Null
+Set-ItemProperty -Path "HKCU:\Software\Classes\Directory\Background\shell\VSCode\command" -Name "(Default)" -Value "`"$exe`" `"%V`""
+
+Write-Host "Concluido! Atalho 'Abrir com o Code' adicionado ao menu de contexto."
+
+
+
+
+
+
+
+
+
+
+
+Opção 2: .bat que chama o PowerShell direto 
+
+@echo off
+powershell -ExecutionPolicy Bypass -Command ^
+"$exe = '%LOCALAPPDATA%\Programs\Microsoft VS Code\Code.exe'; ^
+New-Item -Path 'HKCU:\Software\Classes\Directory\shell\VSCode' -Force | Out-Null; ^
+Set-ItemProperty -Path 'HKCU:\Software\Classes\Directory\shell\VSCode' -Name '(Default)' -Value 'Abrir com o Code'; ^
+Set-ItemProperty -Path 'HKCU:\Software\Classes\Directory\shell\VSCode' -Name 'Icon' -Value $exe; ^
+New-Item -Path 'HKCU:\Software\Classes\Directory\shell\VSCode\command' -Force | Out-Null; ^
+Set-ItemProperty -Path 'HKCU:\Software\Classes\Directory\shell\VSCode\command' -Name '(Default)' -Value (\"`\"$exe`\" `\"%%V`\"\"); ^
+New-Item -Path 'HKCU:\Software\Classes\Directory\Background\shell\VSCode' -Force | Out-Null; ^
+Set-ItemProperty -Path 'HKCU:\Software\Classes\Directory\Background\shell\VSCode' -Name '(Default)' -Value 'Abrir com o Code'; ^
+Set-ItemProperty -Path 'HKCU:\Software\Classes\Directory\Background\shell\VSCode' -Name 'Icon' -Value $exe; ^
+New-Item -Path 'HKCU:\Software\Classes\Directory\Background\shell\VSCode\command' -Force | Out-Null; ^
+Set-ItemProperty -Path 'HKCU:\Software\Classes\Directory\Background\shell\VSCode\command' -Name '(Default)' -Value (\"`\"$exe`\" `\"%%V`\"\")"
+echo Concluido!
+pause
