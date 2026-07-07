@@ -1,37 +1,63 @@
-Agora vou criar o `.ps1` idiomático — script PowerShell "de verdade": com help embutido, parâmetros (`-Uninstall`, `-KeepModernMenu`, `-NoRestartExplorer`), detecção automática do `Code.exe`, tratamento de erro e reinício limpo do Explorer.
+# VS Code no menu de contexto do Windows 11
 
-Vou validar a sintaxe do script sem executá-lo (só análise do parser, não roda nada nem mexe no registro):
+Adiciona **"Abrir com o Code"** ao clicar com o botão direito em **arquivos e pastas** — direto no primeiro clique, sem passar por *"Mostrar mais opções"*.
 
-Sintaxe OK (o exit 1 veio só do `Get-Help` formatando, não do parser). Vou fazer um teste seco da lógica de detecção do `Code.exe` e da montagem das chaves/comando — sem tocar no registro:
+## Requisitos
 
-Pronto. Criei [contextmenu/vscode_contextmenu.ps1](contextmenu/vscode_contextmenu.ps1) — versão PowerShell idiomática. Validei o parser (sem erros) e testei a lógica em seco: **seu VS Code é instalação por usuário** (`...\AppData\Local\Programs\Microsoft VS Code\Code.exe`) e o script o detecta sozinho — ou seja, nem precisa de admin.
+- Windows 11
+- VS Code instalado (por usuário ou por máquina — o script detecta sozinho)
+- PowerShell 5.1+ (já vem no Windows)
+- **Não** precisa de administrador (mexe apenas no seu `HKCU`)
 
-## O que o script faz "do jeito certo"
+## Instalação
 
-- **Help embutido** (`Get-Help .\vscode_contextmenu.ps1 -Full`) com `.SYNOPSIS`, `.DESCRIPTION`, `.EXAMPLE`.
-- **Parâmetros** em vez de editar o código:
-  - `-Uninstall` → remove os itens e restaura o menu novo do Windows 11.
-  - `-KeepModernMenu` → instala mas **não** força o menu clássico (fica em "Mostrar mais opções").
-  - `-NoRestartExplorer` → não reinicia o Explorer no fim.
-- **Detecção automática** do `Code.exe`: por usuário → por máquina → `Program Files (x86)` → PATH.
-- `$ErrorActionPreference = 'Stop'` + `Set-StrictMode`, funções pequenas e reaproveitadas, `-LiteralPath` (importante por causa da chave literal `*`).
-- **Reinício limpo** do Explorer (só sobe de novo se o Windows não tiver religado sozinho — evita janela sobrando).
-- Aviso se a sessão estiver **elevada** (a mudança é HKCU; elevar com outra conta grava no lugar errado).
-- Registra os 3 alvos com o token correto: `%1` para arquivos e pasta selecionada, `%V` para o fundo da pasta.
-
-## Como executar
-
-O Windows bloqueia `.ps1` por duplo-clique (Execution Policy). As formas corretas:
-
-**Opção 1 — direto pelo terminal (recomendada):**
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Admin\Desktop\contextmenu\vscode_contextmenu.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\vscode_contextmenu.ps1"
 ```
 
-**Opção 2 — clicar com botão direito no arquivo `.ps1` → "Executar com o PowerShell".** Se a política bloquear, use a Opção 1.
+Ou clique com o botão direito no `.ps1` → **Executar com o PowerShell**.
 
-Para desfazer depois, mesmo comando com `-Uninstall` no final.
+> ⚠️ Execute como seu usuário normal. **Não** use "Executar como administrador" — a alteração é do `HKCU` e, se elevada com outra conta, iria para o lugar errado.
 
-> Rode como seu usuário normal — **não** "Executar como administrador". A alteração é toda no seu HKCU.
+## Opções
 
-Não executei a instalação (ela reinicia o Explorer e troca o menu do sistema) — deixo isso para você rodar quando quiser. Quer que eu crie também um `.cmd` de um clique que já chama o `.ps1` com o `-ExecutionPolicy Bypass` (aí volta a ser duplo-clique e pronto)?
+| Opção | O que faz |
+| --- | --- |
+| *(nenhuma)* | Instala os itens e força o menu clássico (item aparece no 1º clique) |
+| `-Uninstall` | Remove os itens e restaura o menu novo do Windows 11 |
+| `-KeepModernMenu` | Instala, mas **não** força o menu clássico (item fica em "Mostrar mais opções") |
+| `-NoRestartExplorer` | Não reinicia o `explorer.exe` ao final |
+
+### Exemplos
+
+```powershell
+# Instalar (item no 1º clique)
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\vscode_contextmenu.ps1"
+
+# Desinstalar (volta ao menu do Windows 11)
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\vscode_contextmenu.ps1" -Uninstall
+
+# Instalar sem forçar o menu clássico
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\vscode_contextmenu.ps1" -KeepModernMenu
+```
+
+Ajuda embutida completa:
+
+```powershell
+Get-Help .\vscode_contextmenu.ps1 -Full
+```
+
+## Como funciona
+
+- Cria verbos de shell em `HKCU\Software\Classes` para **arquivos** (`*`), **pastas** (`Directory`) e **fundo de pasta** (`Directory\Background`).
+- Força o menu de contexto clássico criando `HKCU\...\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32` com valor vazio — a única forma, via registro, de o item aparecer no **primeiro clique** no Windows 11.
+
+## Observações
+
+- Forçar o menu clássico troca **todo** o menu de contexto para o estilo antigo (Windows 10) no seu usuário. Esse é o preço de eliminar o "Mostrar mais opções".
+- É um ajuste **não documentado** pela Microsoft: uma atualização grande de versão do Windows pode resetá-lo — basta rodar o script de novo.
+- Desfazer manualmente:
+
+```powershell
+reg delete "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}" /f
+```
